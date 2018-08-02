@@ -66,3 +66,73 @@ getJson("https://wzq.tenpay.com/cgi-bin/userinfo.fcgi")
 .then(function() {
     console.log("rejected");
 });
+
+// Promise.prototype.then(function resolved() {}, function rejected() {}) 的作用是为 Promise 实例添加状态改变时的回调函数。
+// then 方法的第一个回调函数是 resolved 状态的回调函数，第二个参数（可选）是rejected状态的回调函数
+// then 方法返回的是一个新的 Promise实例（注意不是原来 那个Promise实例），因此可采用链式写法，即then方法后再调用一个then方法
+new Promise(function(resolve, reject) {
+    resolve({
+        a: 1,
+        b:2
+    })
+}).then(function resolved(json) {
+    console.log(json);
+    return json;
+}).then(function resolved(json) {
+    console.log(json);
+}).then(function resolved(json) {
+    console.log(json);
+});
+/**
+ * 第一个then方法指定的回调函数，返回的是另一个Promise对象。这时，第二个then方法指定的回调函数，就会等待这个新的Promise对象状态发生变化。
+ * 第三个then因为第二个回调未传递值，因此为undefined
+ * output:
+ *  Object {a: 1, b: 2}
+ *  Object {a: 1, b: 2}
+ *  undefined
+ */
+
+// Promise.prototype.catch() 是.then(null, rejection)的别名，用于指定发生错误时的回调函数
+// 一般来说，不要在then方法里面定义 Reject 状态的回调函数（即then的第二个参数），总是使用catch方法。
+new Promise(function(resolve, reject) {
+    throw new Error("test");
+    // setTimeout(reject(123), 1000);
+}).then(function(json) {
+    console.log("resolved");
+}, function() {
+    console.log("rejected");
+}).catch(function(err) {
+    console.log("catch");
+    console.log(err);
+})
+// 一般总是建议，Promise 对象后面要跟catch方法，这样可以处理 Promise 内部发生的错误。
+// catch方法返回的还是一个 Promise 对象，因此后面还可以接着调用then方法。
+
+// Promise.prototype.finally() 用于指定不管promise 对象最后状态如何，都会执行的操作，ES2018引入，目前chrome还不支持。
+new Promise(function(resolve, reject) {
+
+}).then(function() {
+
+}).catch(function() {
+
+}).finally(function() {
+    console.log("must be exec.");
+});
+
+// finally 原理：
+Promise.prototype.finally = function (callback) {
+    let P = this.constructor;
+    return this.then(
+      value  => P.resolve(callback()).then(() => value),
+      reason => P.resolve(callback()).then(() => { throw reason })
+    );
+  };
+
+// Promise.all(); 用于将多个Promise实例，包装成一个新的Promise实例
+const p = Promise.all([p1, p2, p3]);
+
+// p的状态由p1、p2、p3决定，分成两种情况。
+// （1）只有p1、p2、p3的状态都变成fulfilled，p的状态才会变成fulfilled，此时p1、p2、p3的返回值组成一个数组，传递给p的回调函数。
+// （2）只要p1、p2、p3之中有一个被rejected，p的状态就变成rejected，此时第一个被reject的实例的返回值，会传递给p的回调函数。
+
+
